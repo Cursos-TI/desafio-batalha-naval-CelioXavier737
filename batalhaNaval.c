@@ -73,13 +73,17 @@ int main() {
     // 1 1 1 1 1
     // 0 0 1 0 0
 
+    #define TAMANHO_TABULEIRO 10
+    #define AGUA 0
+    #define NAVIO 3
+
     // Declara o tabuleiro
-    int tabuleiro[10][10] = {0};
+    int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO] = {AGUA};
 
 
     // Navios representados por vetores com valores distintos
-    int navio1[3] = {1, 1, 1};  // Navio1  horizontal
-    int navio2[3] = {2, 2, 2};  // Navio2 vertical
+    int navio1[3] = {NAVIO, NAVIO, NAVIO};  // Navio1  horizontal
+    int navio2[3] = {NAVIO, NAVIO, NAVIO};  // Navio2 vertical
 
     printf("Tabuleiro inicial:\n\n");
     imprimir_tabuleiro(tabuleiro);
