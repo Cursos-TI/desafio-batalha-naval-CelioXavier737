@@ -4,6 +4,43 @@
 // Este código inicial serve como base para o desenvolvimento do sistema de Batalha Naval.
 // Siga os comentários para implementar cada parte do desafio.
 
+// Função para imprimir o tabuleiro
+void imprimir_tabuleiro(int tabuleiro[10][10]) {
+    // Imprime o cabeçalho das colunas (A a J)
+    printf("   ");  // Espaço para o canto superior esquerdo
+    for (char letra = 'A'; letra <= 'J'; letra++) {
+        printf(" %c ", letra);
+    }
+    printf("\n");
+
+    // Imprime as linhas com números e os dados do tabuleiro
+    for (int i = 0; i < 10; i++) {
+        printf("%2d ", i);  // Número da linha com espaçamento
+        for (int j = 0; j < 10; j++) {
+            printf(" %d ", tabuleiro[i][j]);
+        }
+        printf("\n");
+    }
+}
+
+
+// Função para verificar se há espaço vazio
+int posicao_vazia(int tabuleiro[10][10], int linha, int coluna, char direcao) {
+    if (direcao == 'H' || direcao == 'h') {
+        if (coluna + 3 > 10) return 0;
+        for (int j = coluna; j < coluna + 3; j++) {
+            if (tabuleiro[linha][j] != 0) return 0;
+        }
+    } else if (direcao == 'V' || direcao == 'v') {
+        if (linha + 3 > 10) return 0;
+        for (int i = linha; i < linha + 3; i++) {
+            if (tabuleiro[i][coluna] != 0) return 0;
+        }
+    }
+    return 1;
+}
+
+
 int main() {
     // Nível Novato - Posicionamento dos Navios
     // Sugestão: Declare uma matriz bidimensional para representar o tabuleiro (Ex: int tabuleiro[5][5];).
@@ -35,6 +72,38 @@ int main() {
     // 0 0 1 0 0
     // 1 1 1 1 1
     // 0 0 1 0 0
+
+    // Declara o tabuleiro
+    int tabuleiro[10][10] = {0};
+
+
+    // Navios representados por vetores com valores distintos
+    int navio1[3] = {1, 1, 1};  // Navio1  horizontal
+    int navio2[3] = {2, 2, 2};  // Navio2 vertical
+
+    printf("Tabuleiro inicial:\n\n");
+    imprimir_tabuleiro(tabuleiro);
+    printf("\n**********\n\n");
+
+    // Posiciona navio1 horizontalmente
+    if (posicao_vazia(tabuleiro, 2, 1, 'H')) {
+        for (int k = 0; k < 3; k++) {
+            tabuleiro[2][1 + k] = navio1[k];  // Copia do vetor navio1 para o tabuleiro
+        }
+    }
+
+    // Posiciona navio2 verticalmente
+    if (posicao_vazia(tabuleiro, 5, 2, 'V')) {
+        for (int k = 0; k < 3; k++) {
+            tabuleiro[5 + k][2] = navio2[k];  // Copia do vetor navio2 para o tabuleiro
+        }
+    }
+
+    printf("Tabuleiro após posicionar os navios:\n\n");
+    imprimir_tabuleiro(tabuleiro);
+    printf("\n**********\n\n");
+
+
 
     return 0;
 }
