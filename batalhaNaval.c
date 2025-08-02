@@ -72,28 +72,28 @@ int main() {
     // Posiciona navio horizontal
     if (posicao_vazia(tabuleiro, 2, 1, 'H')) {
         for (int k = 0; k < 3; k++) {
-            tabuleiro[2][1 + k] = navio1[k];
+            tabuleiro[2][1 + k] = NAVIO;
         }
     }
 
     // Posiciona navio vertical
     if (posicao_vazia(tabuleiro, 5, 2, 'V')) {
         for (int k = 0; k < 3; k++) {
-            tabuleiro[5 + k][2] = navio2[k];
+            tabuleiro[5 + k][2] = NAVIO;
         }
     }
 
     // Posiciona navio na diagonal principal (↘)
     if (posicao_vazia_diagonal(tabuleiro, 2, 5, 'D')) {
         for (int k = 0; k < 3; k++) {
-            tabuleiro[2 + k][5 + k] = navio3[k];
+            tabuleiro[2 + k][5 + k] = NAVIO;
         }
     }
 
     // Posiciona navio na diagonal secundária (↙)
     if (posicao_vazia_diagonal(tabuleiro, 0, 9, 'E')) {
         for (int k = 0; k < 3; k++) {
-            tabuleiro[0 + k][9 - k] = navio4[k];
+            tabuleiro[0 + k][9 - k] = NAVIO;
         }
     }
 
