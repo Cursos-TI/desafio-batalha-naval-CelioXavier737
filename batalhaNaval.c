@@ -3,17 +3,18 @@
 #define TAMANHO_TABULEIRO 10
 #define AGUA 0
 #define NAVIO 3
+#define CONE 1
+#define CRUZ 2
+#define OCTAEDRO 4
 
 // Função para imprimir o tabuleiro
 void imprimir_tabuleiro(int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO]) {
-    // Imprime o cabeçalho das colunas (letras A a J)
     printf("   ");
     for (char letra = 'A'; letra <= 'J'; letra++) {
         printf(" %c ", letra);
     }
     printf("\n");
 
-    // Imprime cada linha com numeração e conteúdo
     for (int i = 0; i < TAMANHO_TABULEIRO; i++) {
         printf("%2d ", i);
         for (int j = 0; j < TAMANHO_TABULEIRO; j++) {
@@ -23,84 +24,107 @@ void imprimir_tabuleiro(int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO]) {
     }
 }
 
-// Verifica se há espaço vazio para navio horizontal ou vertical
-int posicao_vazia(int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO], int linha, int coluna, char direcao) {
+// Função para posicionar navio com base na direção
+void posicionar_navio_no_tabuleiro(int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO],
+                                   int linha, int coluna, char direcao, int tamanho_navio) {
+    int pode_posicionar = 1;
+
     if (direcao == 'H' || direcao == 'h') {
-        if (coluna + 3 > TAMANHO_TABULEIRO) return 0;
-        for (int j = coluna; j < coluna + 3; j++) {
-            if (tabuleiro[linha][j] != AGUA) return 0;
+        if (coluna + tamanho_navio > TAMANHO_TABULEIRO) return;
+        for (int j = coluna; j < coluna + tamanho_navio; j++) {
+            if (tabuleiro[linha][j] != AGUA) pode_posicionar = 0;
         }
-    } else if (direcao == 'V' || direcao == 'v') {
-        if (linha + 3 > TAMANHO_TABULEIRO) return 0;
-        for (int i = linha; i < linha + 3; i++) {
-            if (tabuleiro[i][coluna] != AGUA) return 0;
+        if (pode_posicionar) {
+            for (int j = coluna; j < coluna + tamanho_navio; j++) {
+                tabuleiro[linha][j] = NAVIO;
+            }
         }
     }
-    return 1;
+    else if (direcao == 'V' || direcao == 'v') {
+        if (linha + tamanho_navio > TAMANHO_TABULEIRO) return;
+        for (int i = linha; i < linha + tamanho_navio; i++) {
+            if (tabuleiro[i][coluna] != AGUA) pode_posicionar = 0;
+        }
+        if (pode_posicionar) {
+            for (int i = linha; i < linha + tamanho_navio; i++) {
+                tabuleiro[i][coluna] = NAVIO;
+            }
+        }
+    }
+    else if (direcao == 'D' || direcao == 'd') {
+        if (linha + tamanho_navio > TAMANHO_TABULEIRO || coluna + tamanho_navio > TAMANHO_TABULEIRO) return;
+        for (int k = 0; k < tamanho_navio; k++) {
+            if (tabuleiro[linha + k][coluna + k] != AGUA) pode_posicionar = 0;
+        }
+        if (pode_posicionar) {
+            for (int k = 0; k < tamanho_navio; k++) {
+                tabuleiro[linha + k][coluna + k] = NAVIO;
+            }
+        }
+    }
+    else if (direcao == 'E' || direcao == 'e') {
+        if (linha + tamanho_navio > TAMANHO_TABULEIRO || coluna - (tamanho_navio - 1) < 0) return;
+        for (int k = 0; k < tamanho_navio; k++) {
+            if (tabuleiro[linha + k][coluna - k] != AGUA) pode_posicionar = 0;
+        }
+        if (pode_posicionar) {
+            for (int k = 0; k < tamanho_navio; k++) {
+                tabuleiro[linha + k][coluna - k] = NAVIO;
+            }
+        }
+    }
 }
 
-// Verifica se há espaço vazio para navio diagonal
-int posicao_vazia_diagonal(int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO], int linha, int coluna, char direcao) {
-    if (direcao == 'D' || direcao == 'd') { // Diagonal principal (↘)
-        if (linha + 3 > TAMANHO_TABULEIRO || coluna + 3 > TAMANHO_TABULEIRO) return 0;
-        for (int k = 0; k < 3; k++) {
-            if (tabuleiro[linha + k][coluna + k] != AGUA) return 0;
-        }
-    } else if (direcao == 'E' || direcao == 'e') { // Diagonal secundária (↙)
-        if (linha + 3 > TAMANHO_TABULEIRO || coluna - 2 < 0) return 0;
-        for (int k = 0; k < 3; k++) {
-            if (tabuleiro[linha + k][coluna - k] != AGUA) return 0;
+// Funções para posicionar habilidades especiais
+void posicionar_cruz(int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO], int l, int c) {
+    for (int i = -1; i <= 1; i++) {
+        for (int j = -1; j <= 1; j++) {
+            if ((i == 0 || j == 0) && l + i >= 0 && l + i < TAMANHO_TABULEIRO && c + j >= 0 && c + j < TAMANHO_TABULEIRO) {
+                if (tabuleiro[l + i][c + j] == AGUA) tabuleiro[l + i][c + j] = CRUZ;
+            }
         }
     }
-    return 1;
+}
+
+void posicionar_octaedro(int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO], int l, int c) {
+    int delta[5][2] = {{0,0}, {-1,0}, {1,0}, {0,-1}, {0,1}};
+    for (int i = 0; i < 5; i++) {
+        int nl = l + delta[i][0];
+        int nc = c + delta[i][1];
+        if (nl >= 0 && nl < TAMANHO_TABULEIRO && nc >= 0 && nc < TAMANHO_TABULEIRO) {
+            if (tabuleiro[nl][nc] == AGUA) tabuleiro[nl][nc] = OCTAEDRO;
+        }
+    }
+}
+
+void posicionar_cone(int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO], int l, int c) {
+    for (int i = 0; i < 3; i++) {
+        for (int j = -i; j <= i; j++) {
+            int nl = l + i;
+            int nc = c + j;
+            if (nl >= 0 && nl < TAMANHO_TABULEIRO && nc >= 0 && nc < TAMANHO_TABULEIRO) {
+                if (tabuleiro[nl][nc] == AGUA) tabuleiro[nl][nc] = CONE;
+            }
+        }
+    }
 }
 
 int main() {
-    // Declara e inicializa o tabuleiro com 0 (água)
     int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO] = {AGUA};
 
-    // Vetores representando navios de tamanho 3
-    int navio1[3] = {NAVIO, NAVIO, NAVIO};  // Horizontal
-    int navio2[3] = {NAVIO, NAVIO, NAVIO};  // Vertical
-    int navio3[3] = {NAVIO, NAVIO, NAVIO};  // Diagonal principal
-    int navio4[3] = {NAVIO, NAVIO, NAVIO};  // Diagonal secundária
+    // Posiciona navios em locais livres (sem sobrescrever)
+    posicionar_navio_no_tabuleiro(tabuleiro, 0, 0, 'H', 3);
+    posicionar_navio_no_tabuleiro(tabuleiro, 4, 0, 'V', 3);
+    posicionar_navio_no_tabuleiro(tabuleiro, 6, 1, 'D', 3);
+    posicionar_navio_no_tabuleiro(tabuleiro, 1, 9, 'E', 3);
 
-    printf("Tabuleiro inicial:\n\n");
+    // Posiciona figuras sem sobreposição
+    posicionar_cone(tabuleiro, 2, 4);       // cone 3x5
+    posicionar_cruz(tabuleiro, 5, 6);       // cruz 3x3
+    posicionar_octaedro(tabuleiro, 8, 8);   // octaedro 5x5
+
     imprimir_tabuleiro(tabuleiro);
-    printf("\n**********\n\n");
-
-    // Posiciona navio horizontal
-    if (posicao_vazia(tabuleiro, 2, 1, 'H')) {
-        for (int k = 0; k < 3; k++) {
-            tabuleiro[2][1 + k] = NAVIO;
-        }
-    }
-
-    // Posiciona navio vertical
-    if (posicao_vazia(tabuleiro, 5, 2, 'V')) {
-        for (int k = 0; k < 3; k++) {
-            tabuleiro[5 + k][2] = NAVIO;
-        }
-    }
-
-    // Posiciona navio na diagonal principal (↘)
-    if (posicao_vazia_diagonal(tabuleiro, 2, 5, 'D')) {
-        for (int k = 0; k < 3; k++) {
-            tabuleiro[2 + k][5 + k] = NAVIO;
-        }
-    }
-
-    // Posiciona navio na diagonal secundária (↙)
-    if (posicao_vazia_diagonal(tabuleiro, 0, 9, 'E')) {
-        for (int k = 0; k < 3; k++) {
-            tabuleiro[0 + k][9 - k] = NAVIO;
-        }
-    }
-
-    // Exibe o tabuleiro com os 4 navios posicionados
-    printf("Tabuleiro após posicionar os quatro navios (horizontal, vertical e dois diagonais):\n\n");
-    imprimir_tabuleiro(tabuleiro);
-    printf("\n**********\n\n");
+    printf("\n3 - Navio, 1 - Cone, 2 - Cruz, 4 - Octaedro\n");
 
     return 0;
 }
