@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 #define TAMANHO_TABULEIRO 10
 #define AGUA 0
@@ -7,7 +8,6 @@
 #define CRUZ 2
 #define OCTAEDRO 4
 
-// Função para imprimir o tabuleiro
 void imprimir_tabuleiro(int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO]) {
     printf("   ");
     for (char letra = 'A'; letra <= 'J'; letra++) {
@@ -18,13 +18,24 @@ void imprimir_tabuleiro(int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO]) {
     for (int i = 0; i < TAMANHO_TABULEIRO; i++) {
         printf("%2d ", i);
         for (int j = 0; j < TAMANHO_TABULEIRO; j++) {
-            printf(" %d ", tabuleiro[i][j]);
+            int val = tabuleiro[i][j];
+            if(val == AGUA)
+                printf(" 0 ");
+            else if(val == NAVIO)
+                printf(" 3 ");
+            else if(val == CONE)
+                printf(" 1 ");
+            else if(val == CRUZ)
+                printf(" 2 ");
+            else if(val == OCTAEDRO)
+                printf(" 4 ");
+            else
+                printf(" ? ");
         }
         printf("\n");
     }
 }
 
-// Função para posicionar navio com base na direção
 void posicionar_navio_no_tabuleiro(int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO],
                                    int linha, int coluna, char direcao, int tamanho_navio) {
     int pode_posicionar = 1;
@@ -75,56 +86,78 @@ void posicionar_navio_no_tabuleiro(int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABU
     }
 }
 
-// Funções para posicionar habilidades especiais
-void posicionar_cruz(int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO], int l, int c) {
-    for (int i = -1; i <= 1; i++) {
-        for (int j = -1; j <= 1; j++) {
-            if ((i == 0 || j == 0) && l + i >= 0 && l + i < TAMANHO_TABULEIRO && c + j >= 0 && c + j < TAMANHO_TABULEIRO) {
-                if (tabuleiro[l + i][c + j] == AGUA) tabuleiro[l + i][c + j] = CRUZ;
-            }
-        }
-    }
-}
-
-void posicionar_octaedro(int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO], int l, int c) {
-    int delta[5][2] = {{0,0}, {-1,0}, {1,0}, {0,-1}, {0,1}};
-    for (int i = 0; i < 5; i++) {
-        int nl = l + delta[i][0];
-        int nc = c + delta[i][1];
-        if (nl >= 0 && nl < TAMANHO_TABULEIRO && nc >= 0 && nc < TAMANHO_TABULEIRO) {
-            if (tabuleiro[nl][nc] == AGUA) tabuleiro[nl][nc] = OCTAEDRO;
-        }
-    }
-}
-
-void posicionar_cone(int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO], int l, int c) {
+// Preenche matrizes de habilidades (cone 3x5, cruz 3x3, octaedro 5x5)
+void preencher_matriz_cone(int matriz[3][5]) {
     for (int i = 0; i < 3; i++) {
-        for (int j = -i; j <= i; j++) {
-            int nl = l + i;
-            int nc = c + j;
-            if (nl >= 0 && nl < TAMANHO_TABULEIRO && nc >= 0 && nc < TAMANHO_TABULEIRO) {
-                if (tabuleiro[nl][nc] == AGUA) tabuleiro[nl][nc] = CONE;
+        for (int j = 0; j < 5; j++) {
+            matriz[i][j] = (j >= 2 - i && j <= 2 + i) ? 1 : 0;
+        }
+    }
+}
+
+void preencher_matriz_cruz(int matriz[3][3]) {
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            matriz[i][j] = (i == 1 || j == 1) ? 1 : 0;
+        }
+    }
+}
+
+void preencher_matriz_octaedro(int matriz[5][5]) {
+    int centro = 2;
+    for (int i = 0; i < 5; i++) {
+        for (int j = 0; j < 5; j++) {
+            matriz[i][j] = (abs(i - centro) + abs(j - centro) <= centro) ? 1 : 0;
+        }
+    }
+}
+
+void aplicar_habilidade(int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO],
+                        int origem_l, int origem_c,
+                        int altura, int largura,
+                        int matriz_habilidade[altura][largura],
+                        int valor_habilidade) {
+    for (int i = 0; i < altura; i++) {
+        for (int j = 0; j < largura; j++) {
+            if (matriz_habilidade[i][j] == 1) {
+                int lin_tab = origem_l + i;
+                int col_tab = origem_c + j;
+                if (lin_tab >= 0 && lin_tab < TAMANHO_TABULEIRO && col_tab >= 0 && col_tab < TAMANHO_TABULEIRO) {
+                    if (tabuleiro[lin_tab][col_tab] == AGUA) {
+                        tabuleiro[lin_tab][col_tab] = valor_habilidade;
+                    }
+                }
             }
         }
     }
 }
 
 int main() {
-    int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO] = {AGUA};
+    int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO] = { {0} };
 
-    // Posiciona navios em locais livres (sem sobrescrever)
+    // Preencher matrizes de habilidades
+    int matriz_cone[3][5];
+    int matriz_cruz[3][3];
+    int matriz_octaedro[5][5];
+
+    preencher_matriz_cone(matriz_cone);
+    preencher_matriz_cruz(matriz_cruz);
+    preencher_matriz_octaedro(matriz_octaedro);
+
+    // Aplicar habilidades no tabuleiro (áreas vazias)
+    aplicar_habilidade(tabuleiro, 2, 4, 3, 5, matriz_cone, CONE);
+    aplicar_habilidade(tabuleiro, 5, 6, 3, 3, matriz_cruz, CRUZ);
+    aplicar_habilidade(tabuleiro, 5, 2, 5, 5, matriz_octaedro, OCTAEDRO);
+
+    // Posicionar navios SEM sobrepor nenhuma outra peça
     posicionar_navio_no_tabuleiro(tabuleiro, 0, 0, 'H', 3);
     posicionar_navio_no_tabuleiro(tabuleiro, 4, 0, 'V', 3);
-    posicionar_navio_no_tabuleiro(tabuleiro, 6, 1, 'D', 3);
-    posicionar_navio_no_tabuleiro(tabuleiro, 1, 9, 'E', 3);
 
-    // Posiciona figuras sem sobreposição
-    posicionar_cone(tabuleiro, 2, 4);       // cone 3x5
-    posicionar_cruz(tabuleiro, 5, 6);       // cruz 3x3
-    posicionar_octaedro(tabuleiro, 8, 8);   // octaedro 5x5
+    // Navio diagonal na posição (9,0) até (7,2)
+    posicionar_navio_no_tabuleiro(tabuleiro, 7, 0, 'D', 3); 
+    posicionar_navio_no_tabuleiro(tabuleiro, 0, 9, 'E', 3); 
 
     imprimir_tabuleiro(tabuleiro);
-    printf("\n3 - Navio, 1 - Cone, 2 - Cruz, 4 - Octaedro\n");
 
     return 0;
 }
